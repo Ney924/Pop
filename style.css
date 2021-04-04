@@ -15,3 +15,24 @@ html {
 .canvas {
     margin-left: calc(50%-400px);
 }
+
+.end-game {
+   position: absolute;
+   top: 0px;
+   padding: 15px;
+   border-radius: 5px;
+   height: 200px;
+   width: 400px;
+   margin: 150px;
+   background-color: white;
+   display: none;
+   font-family: 'Open Sans';
+   justify-content: center;
+   align-items: center;
+   grid-template-rows: 1fr 1fr 1fr;
+}
+
+.end-game button {
+   font-size: 20px;
+   padding: 5px;
+}
