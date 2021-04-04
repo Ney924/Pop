@@ -4,11 +4,16 @@ const params = {
    widthBall: undefined,
    heightBall: undefined,
    widthNeedle: 80,
+   wind: undefined,
 };
 
 const ballSize = function () {                                                                                    // Генерируем случайные размеры для шаров
    params.widthBall = Math.round(Math.random() * (7 - 3) + 3) * 10;
    params.heightBall = params.widthBall * 1.3;
+}
+
+const speedWind = function () {
+      params.wind = setInterval((Math.random() * 3 - Math.random() * 3), 3000)
 }
 
 const sprites = {
@@ -79,10 +84,11 @@ const load = function () {                                                      
 };
 
 const createBall = function () {                                                                               //Создаём шарики в массиве шары в state 
-   if (state.time > 0) {
+   if (state.time > 0 && state.time % 3 == 0) {
       state.balls.push({
-         x: Math.random() * (params.width - params.widthBall - 0),
+         x: Math.random() * (params.width - params.widthBall),
          y: params.height,
+         dx: 0,
          dy: -((Math.random() * ((2 - 1.5)) + 1.5) * state.coef),
          dell: false,
          color: Math.round(Math.random() * 3),
@@ -90,12 +96,43 @@ const createBall = function () {                                                
          sizeHeight: params.heightBall,
          flight: function () {
             this.y += this.dy;
+         },
+         wind: function () {
+            this.x += this.dx;
          }
       })
    }
 };
 
-const dellBall = function () {                                                                                 //? Удаление шариков
+const wind = function () {
+   for (ball in state.balls) {
+      if (state.time % 3 == 0 && state.balls[ball].x < (params.width - state.balls[ball].sizeWidth) && state.balls[ball].x > 0) {
+         if (params.wind >= 0) {
+            state.balls[ball].dx = 0.2 + params.wind * ((800 - state.balls[ball].x) / 1000);
+         } else {
+            state.balls[ball].dx = -0.2 + params.wind * (state.balls[ball].x / 1000);
+         }
+      }
+      else {
+         state.balls[ball].dx = 0;
+      }
+
+   }
+}
+
+const borderGame = function () {
+   for (ball in state.balls) {
+
+      if (state.balls[ball].x >= (params.width - state.balls[ball].sizeWidth)) {
+         state.balls[ball].dx = 0;
+      }
+      else if (state.balls[ball].x <= 0) {
+         state.balls[ball].dx = 0;
+      }
+   }
+}
+
+const dellBall = function () {                                                                                    //? Удаление шариков
    for (let j = 0; j < state.balls.length; j++) {
 
       if (state.balls[j].y < -100) {                                                                              // Удаление улетевших шариков
@@ -153,6 +190,9 @@ const update = function () {
       if (state.balls[i].dy) {
          state.balls[i].flight();
       }
+      if (state.balls[i].dx) {
+         state.balls[i].wind();
+      }
    }
 };
 
@@ -164,6 +204,8 @@ const start = function () {
    ballSize();
    stopwatch();
    stopTime();
+   speedWind();
+   wind();
    run();
 };
 
@@ -171,11 +213,13 @@ let date = new Date();
 
 const run = function () {
    update();
-   if (new Date() - date > 500) {
+   if (new Date() - date > 100) {
       createBall();
       ballSize();
       dellBall();
       stopTime();
+      borderGame();
+      wind();
       date = new Date();
    }
    render();
@@ -185,18 +229,3 @@ const run = function () {
 window.addEventListener('load', function () {
    start();
 })
-
-
-
-
-
-
-
-
-
-/* switch (e.keyCode) {
-   case 37:
-      state.needle.dx = -state.needle.velocity;
-   case 39:
-      state.needle.dx = state.needle.velocity;
-} */
