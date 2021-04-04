@@ -1,10 +1,9 @@
-const params = {
+const params = {                                                                                                 // Базовые параметры игры        
    width: 800,
    height: 600,
    widthBall: undefined,
    heightBall: undefined,
    widthNeedle: 80,
-   wind: undefined,
 };
 
 const ballSize = function () {                                                                                    // Генерируем случайные размеры для шаров
@@ -13,7 +12,7 @@ const ballSize = function () {                                                  
 }
 
 const speedWind = function () {
-      params.wind = setInterval((Math.random() * 3 - Math.random() * 3), 3000)
+   state.breeze = (Math.random() * 3 - Math.random() * 3)
 }
 
 const sprites = {
@@ -27,7 +26,6 @@ const state = {                                                                 
    needle: {
       x: 360,
       y: 0,
-      velocity: 6,
       dx: 0,
       move: function () {
          this.x += this.dx;
@@ -38,8 +36,9 @@ const state = {                                                                 
    },
    scoreWin: 0,
    scoreLoose: 0,
-   time: 20,
+   time: 60,
    coef: 1,
+   breeze: undefined,
 };
 
 const init = function () {
@@ -47,8 +46,7 @@ const init = function () {
    ctx = canvas.getContext("2d");
    ctx.fillStyle = '#fff';
    ctx.font = "18px Verdana";
-   window.addEventListener("keydown", function (e) {
-
+   window.addEventListener("keydown", function (e) {                                  // Управление иглой
       if (e.keyCode == 37 && state.needle.x < 0) {
          state.needle.x = 0;
       }
@@ -104,31 +102,19 @@ const createBall = function () {                                                
    }
 };
 
-const wind = function () {
+const wind = function () {                                                                                    // Задаём ограничения для ветра
    for (ball in state.balls) {
       if (state.time % 3 == 0 && state.balls[ball].x < (params.width - state.balls[ball].sizeWidth) && state.balls[ball].x > 0) {
-         if (params.wind >= 0) {
-            state.balls[ball].dx = 0.2 + params.wind * ((800 - state.balls[ball].x) / 1000);
+         if (state.breeze >= 0) {
+            state.balls[ball].dx = 0.2 + state.breeze * ((800 - state.balls[ball].x) / 1000);
          } else {
-            state.balls[ball].dx = -0.2 + params.wind * (state.balls[ball].x / 1000);
+            state.balls[ball].dx = -0.2 + state.breeze * (state.balls[ball].x / 1000);
          }
       }
       else {
          state.balls[ball].dx = 0;
       }
 
-   }
-}
-
-const borderGame = function () {
-   for (ball in state.balls) {
-
-      if (state.balls[ball].x >= (params.width - state.balls[ball].sizeWidth)) {
-         state.balls[ball].dx = 0;
-      }
-      else if (state.balls[ball].x <= 0) {
-         state.balls[ball].dx = 0;
-      }
    }
 }
 
@@ -151,23 +137,18 @@ let stopwatch = function () {
    if (state.time > 0) {
       setInterval(() => {
          state.time -= 1;
-         state.coef += 0.02
+         state.coef += 0.02;
+         state.breeze = 0;
+         speedWind();
       }, 1000)
    }
 }
 
-
-const gameOwer = function () {
-   alert('Игра окончена, ваш счёт: ' + state.scoreWin)
-}
-
 const stopTime = function () {
    if (state.time == 0) {
-      gameOwer()
+      alert('Игра окончена, ваш счёт: ' + state.scoreWin)
    }
 }
-
-
 
 const render = function () {                                                                                   //! Рендерим все наши объекты
    ctx.clearRect(0, 0, params.width, params.height);
@@ -218,7 +199,6 @@ const run = function () {
       ballSize();
       dellBall();
       stopTime();
-      borderGame();
       wind();
       date = new Date();
    }
