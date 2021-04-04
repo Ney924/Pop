@@ -27,6 +27,7 @@ const state = {                                                                 
       x: 360,
       y: 0,
       dx: 0,
+      velocity: 6,
       move: function () {
          this.x += this.dx;
       },
@@ -127,7 +128,7 @@ const dellBall = function () {                                                  
       }
       let needleCenter = state.needle.x + params.widthNeedle / 2
 
-      if ((needleCenter < state.balls[j].x + params.widthBall) && needleCenter > state.balls[j].x && (state.balls[j].y < 45 && state.balls[j].y < 35)) {
+      if ((needleCenter < state.balls[j].x + params.widthBall) && needleCenter > state.balls[j].x && (state.balls[j].y < 48 && state.balls[j].y < 32)) {
          state.balls.splice(j, 1) && (state.scoreWin += 1);                   // Кол-во лопнувших шариков
       };
    }
@@ -138,11 +139,19 @@ let stopwatch = function () {
       setInterval(() => {
          state.time -= 1;
          state.coef += 0.02;
-         state.breeze = 0;
-         speedWind();
       }, 1000)
    }
 }
+
+const timeWind = function () {
+   if (state.time > 0) {
+      setInterval(() => {
+         state.breeze = 0;
+         speedWind();
+      }, 3000)
+   }
+}
+
 
 const stopTime = function () {
    if (state.time == 0) {
@@ -187,6 +196,7 @@ const start = function () {
    stopTime();
    speedWind();
    wind();
+   timeWind();
    run();
 };
 
