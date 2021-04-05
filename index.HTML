@@ -13,11 +13,14 @@
          Возможно, ваш браузер не поддерживает JavaScript и HTML5!
       </canvas>
       <div class="end-game" id='end'>
-         <div id='count'>
-            <h3>ВАШ СЧЁТ:</h3>
+         <h4>ИГРА ОКОНЧЕНА!</h4>
+         <div>
+            <h4>ВАШ СЧЁТ: <span id='score'></span>
+            </h4>
          </div>
-         <div id='lose'>
-            <h3>ШАРИКОВ УЛЕТЕЛО:</h3>
+         <div>
+            <h4>ШАРИКОВ УЛЕТЕЛО: <span id='missed'></span>
+            </h4>
          </div>
          <button onclick="start()"> Заново </button>
       </div>

@@ -13,28 +13,15 @@ const state = {                                                                 
       y: 0,
       dx: 0,
       velocity: 6,
-      move: function () {
-         this.x += this.dx;
-      },
-      stop: function () {
-         this.dx = 0;
-      }
+      move: function () { this.x += this.dx; },
+      stop: function () { this.dx = 0; }
    },
    scoreWin: 0,
-   scoreLoose: 0,
-   time: 10,
-   coef: 1,
+   missed: 0,
+   time: undefined,
+   coef: undefined,
    breeze: undefined,
 };
-
-const ballSize = function () {                                                                           // Генерируем случайные размеры для шаров
-   params.widthBall = Math.round(Math.random() * (7 - 3) + 3) * 10;
-   params.heightBall = params.widthBall * 1.3;
-}
-
-const speedWind = function () {
-   state.breeze = (Math.random() * 3 - Math.random() * 3)
-}
 
 const sprites = {
    background: undefined,
@@ -47,18 +34,12 @@ const init = function () {
    ctx = canvas.getContext("2d");
    ctx.fillStyle = '#fff';
    ctx.font = "18px Verdana";
-   window.addEventListener("keydown", function (e) {                          // Управление иглой
-      if (e.keyCode == 37 && state.needle.x < 0) {
-         state.needle.x = 0;
-      }
-      else if (e.keyCode == 39 && state.needle.x > 720) {
-         state.needle.x = 720;
-      }
-      else if (e.keyCode == 37) {
-         state.needle.dx = -state.needle.velocity;
-      }
-      else if (e.keyCode == 39) {
-         state.needle.dx = state.needle.velocity;
+   window.addEventListener("keydown", function (e) {                             // Управление иглой
+      if (state.time > 0) {
+         if (e.keyCode == 37 && state.needle.x < 0) { state.needle.x = 0; }
+         else if (e.keyCode == 39 && state.needle.x > 720) { state.needle.x = 720; }
+         else if (e.keyCode == 37) { state.needle.dx = -state.needle.velocity; }
+         else if (e.keyCode == 39) { state.needle.dx = state.needle.velocity; }
       }
    });
    window.addEventListener("keyup", function (e) {
@@ -67,7 +48,7 @@ const init = function () {
 };
 
 const load = function () {                                                                                // Загружаем из объекта sprites картинки для отрисовки
-   sprites.background = new Image();                                                                           
+   sprites.background = new Image();
    sprites.background.src = 'images/background.png';
    sprites.ball[0] = new Image();
    sprites.ball[0].src = 'images/ball.png';
@@ -77,13 +58,17 @@ const load = function () {                                                      
    sprites.ball[2].src = 'images/ball2.png';
    sprites.ball[3] = new Image();
    sprites.ball[3].src = 'images/ball3.png';
-
    sprites.needle = new Image();
    sprites.needle.src = 'images/needle.png';
 };
 
+const ballSize = function () {                                                                           // Генерируем случайные размеры для шаров
+   params.widthBall = Math.round(Math.random() * (7 - 3) + 3) * 10;
+   params.heightBall = params.widthBall * 1.3;
+}
+
 const createBall = function () {                                                                           //Создаём шарики в массиве шары в state 
-   if (state.time > 0 && state.time % 3 == 0) {
+   if (state.time > 0) {
       state.balls.push({
          x: Math.random() * (params.width - params.widthBall),
          y: params.height,
@@ -93,77 +78,68 @@ const createBall = function () {                                                
          color: Math.round(Math.random() * 3),
          sizeWidth: params.widthBall,
          sizeHeight: params.heightBall,
-         flight: function () {
-            this.y += this.dy;
-         },
-         wind: function () {
-            this.x += this.dx;
-         }
+         flight: function () { this.y += this.dy; },
+         wind: function () { this.x += this.dx; }
       })
    }
 };
 
+const dellBall = function () {                                                                              //? Удаление шариков
+   let j = 0;
+   while (state.balls[j]) {
+      let needleCenter = state.needle.x + params.widthNeedle / 2;
+      if (needleCenter < state.balls[j].x + params.widthBall &&                                             // Прокол шариков
+         needleCenter > state.balls[j].x &&
+         state.balls[j].y < 38 &&
+         state.balls[j].y > 28 &&
+         state.time > 0) {
+         state.balls.splice(j, 1)
+         state.scoreWin += 1;                                                                               // Кол-во лопнувших шариков
+      } else if (state.balls[j].y < -100) {                                                                 // Удаление улетевших шариков
+         state.balls.splice(j, 1);
+         if (state.time > 0) {state.missed += 1}
+      } else { ++j }
+   }
+}
+
+const dellBallForStart = function () {
+   state.balls = [];
+}
+
 const wind = function () {                                                                                  // Задаём ограничения для ветра
    for (ball in state.balls) {
       if (state.time % 3 == 0 &&
-         state.balls[ball].x <= (params.width - state.balls[ball].sizeWidth) &&
+         state.balls[ball].x <= params.width - state.balls[ball].sizeWidth &&
          state.balls[ball].x >= 0) {
-         if (state.breeze >= 0) {
-            state.balls[ball].dx = 0.2 + state.breeze * ((800 - state.balls[ball].x) / 1000);
-         } else {
-            state.balls[ball].dx = -0.2 + state.breeze * (state.balls[ball].x / 1000);
-         }
+         if (state.breeze >= 0) { state.balls[ball].dx = 0.2 + state.breeze * ((800 - state.balls[ball].x) / 1000); }
+         else { state.balls[ball].dx = -0.2 + state.breeze * (state.balls[ball].x / 1000); }
       }
-      else {
-         state.balls[ball].dx = 0;
-      }
-
+      else { state.balls[ball].dx = 0; }
    }
 }
 
-const dellBall = function () {                                                                              //? Удаление шариков
-   for (let j = 0; j < state.balls.length; j++) {
-
-      if (state.balls[j].y < -100) {                                                                        // Удаление улетевших шариков
-         state.balls.splice(j, 1);
-         state.scoreLoose += 1
-      }
-      let needleCenter = state.needle.x + params.widthNeedle / 2
-
-      if ((needleCenter < state.balls[j].x + params.widthBall) &&
-         needleCenter > state.balls[j].x && (state.balls[j].y < 38 &&
-            state.balls[j].y > 28)) {
-         state.balls.splice(j, 1) && (state.scoreWin += 1);              // Кол-во лопнувших шариков
-      };
-   }
-};
-
-const startTime = function () {
-   if (state.time > 0) {
-      setInterval(() => {
-         state.time -= 1;
-         state.coef += 0.015;
-      }, 1000)
-   } else {
-      state.time = 0;
-   }
+const speedWind = function () {                                                                             // Генерируем случайную силу и нарправление ветра
+   state.breeze = (Math.random() * 3 - Math.random() * 3)
 }
 
-const stopTime = function () {
-   if (state.time == 0) {
-      const endGame = document.getElementById('end');
-      endGame.style.display = 'grid';
-      //alert('Игра окончена, ваш счёт: ' + state.scoreWin)
-   }
-}
-
-const timeWind = function () {
+const timeWind = function () {                                                                               // Ветер (раз в 3 секунды)
    if (state.time > 0 && state.time % 3 == 0) {
       setInterval(() => {
          state.breeze = 0;
          speedWind();
          wind();
       }, 3000)
+   }
+}
+
+const stopTime = function () {                                                                                // Вывод результата
+   if (state.time == 0) {
+      const endGame = document.getElementById('end');
+      const score = document.getElementById('score');
+      const miss = document.getElementById('missed');
+      endGame.style.display = 'grid'
+      score.innerHTML = state.scoreWin;
+      miss.innerHTML = state.missed;
    }
 }
 
@@ -181,8 +157,7 @@ const render = function () {                                                    
    };
    ctx.fillText('Время до окончания : ' + state.time, 500, 550);
    ctx.fillText('Лопнули шариков!!! : ' + state.scoreWin, 500, 570);
-   ctx.fillText('Упустили(( : ' + state.scoreLoose, 500, 590);
-
+   ctx.fillText('Упустили : ' + state.missed, 500, 590);
 };
 
 const update = function () {
@@ -190,36 +165,30 @@ const update = function () {
       state.needle.move();
    }
    for (let i = 0; i < state.balls.length; i++) {
-      if (state.balls[i].dy) {
-         state.balls[i].flight();
-      }
-      if (state.balls[i].dx) {
-         state.balls[i].wind();
-      }
+      if (state.balls[i].dy) { state.balls[i].flight(); }
+      if (state.balls[i].dx) { state.balls[i].wind(); }
    }
 };
 
 const start = function () {
    const endGame = document.getElementById('end');
    endGame.style.display = 'none';
-   state.scoreLoose = 0;
+   state.missed = 0;
    state.scoreWin = 0;
-   state.time = 10;
-   state.coef = 1,
+   state.time = 60;
+   state.x = 360;
+   state.coef = 1;
    init();
    load();
+   dellBallForStart();
    createBall();
-   dellBall();
-   ballSize();
-   startTime();
    speedWind();
-   wind();
    timeWind();
-   run();
-   stopTime();
 };
 
 let date = new Date();
+let fullTime = new Date();
+let windTime = new Date();
 
 const run = function () {
    update();
@@ -227,9 +196,18 @@ const run = function () {
    wind();
    ballSize();
    stopTime();
-   if (new Date() - date > 500) {
+   if (new Date() - date > 1000) {
       createBall();
       date = new Date();
+   }
+   if (new Date() - windTime > 3000) {
+      speedWind();
+      windTime = new Date();
+   }
+   if (new Date() - fullTime > 1000 && state.time > 0) {
+      state.time -= 1;
+      state.coef += 0.015;
+      fullTime = new Date();
    }
    render();
    window.requestAnimationFrame(run);
@@ -237,4 +215,5 @@ const run = function () {
 
 window.addEventListener('load', function () {
    start();
+   run();
 })
